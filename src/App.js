@@ -1,36 +1,49 @@
-// import * as THREE from "three";
-import { useGLTF } from "@react-three/drei";
-import { XR, createXRStore } from "@react-three/xr";
-import { Canvas } from "@react-three/fiber";
-// import {
-//   Physics,
-//   RigidBody,
-//   CuboidCollider,
-//   BallCollider,
-// } from "@react-three/rapier";
+import { Canvas } from '@react-three/fiber'
+import { useHover, createXRStore, XR, XROrigin, TeleportTarget } from '@react-three/xr'
+import { useRef, useState } from 'react'
+import { Mesh, Vector3 } from 'three'
 
 const store = createXRStore({
-  // hand: { touchPointer: false },
-});
+  hand: { teleportPointer: true },
+  controller: { teleportPointer: true },
+})
 
 export default function App() {
-  const { scene } = useGLTF("/reactlogo.gltf");
+  const [position, setPosition] = useState(new Vector3())
   return (
     <>
+      <button onClick={() => store.enterVR()}>Enter VR</button>
       <button onClick={() => store.enterAR()}>Enter AR</button>
-      <Canvas>
-        {/* <Physics gravity={[0, 0, 0]}> */}
-        <XR store={store} referenceSpace="local-floor">
-          <ambientLight intensity={2} />
-          <pointLight position={[20, 10, -10]} intensity={2} />
-          {/* <RigidBody> */}
-          <primitive position={[0, 1.5, -0.5]} scale={0.1} object={scene} />
-          {/* </RigidBody> */}
+      <Canvas style={{ width: '100%', flexGrow: 1 }}>
+        <XR store={store}>
+          <ambientLight />
+          <XROrigin position={position} />
+          <Cube />
+          {/* <TeleportTarget onTeleport={setPosition}>
+            <mesh scale={[1, 1, 1]} position={[0, -0.5, 0]}>
+              <boxGeometry />
+              <meshBasicMaterial color="green" />
+            </mesh>
+          </TeleportTarget> */}
         </XR>
-        {/* </Physics> */}
       </Canvas>
     </>
-  );
+  )
 }
 
-// useGLTF.preload();
+function Cube() {
+  const ref = useRef(null)
+  const hover = useHover(ref)
+  return (
+    <mesh
+      onClick={() => store.setHand({ rayPointer: { cursorModel: { color: 'green' } } }, 'right')}
+      position={[0, 1.5, -1]}
+      pointerEventsType={{ deny: 'grab' }}
+      ref={ref}
+      scale={[0.5, 0.5, 0.5]}
+    >
+      <boxGeometry />
+      <meshBasicMaterial color={hover ? 'red' : 'blue'} />
+    </mesh>
+  )
+}
